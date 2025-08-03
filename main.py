@@ -21,7 +21,7 @@ async def process_common(dol_common: ProjectDOL, pt: Paratranz, chs_version: str
 
     """ 创建生肉词典 """
     await dol_common.create_dicts()
-
+    await dol_common.update_dicts()
     blacklist_dirs = [
         # "00-framework-tools",
         # "01-config",
@@ -43,7 +43,7 @@ async def process_common(dol_common: ProjectDOL, pt: Paratranz, chs_version: str
         # "special-templates"
     ]
     blacklist_files = []
-    #await dol_common.apply_dicts(blacklist_dirs, blacklist_files, debug_flag=False)
+    await dol_common.apply_dicts(blacklist_dirs, blacklist_files, debug_flag=False)
 
 
 async def main():

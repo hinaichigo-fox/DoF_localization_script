@@ -165,7 +165,7 @@ class ProjectDOL:
                 else:
                     self._game_texts_file_lists.append(Path(root).absolute() / file)
 
-        logger.info(f"##### {self._mention_name}所有文本文件位置已获取 !\n")
+        logger.info(f"##### {self._mention_name} Все расположения текстовых файлов получены !\n")
 
     async def _create_all_text_files_dir(self):
         """创建目录防报错"""
@@ -217,7 +217,7 @@ class ProjectDOL:
             ]
 
         if not any(able_lines):
-            logger.warning(f"\t- ***** 文件 {file} 无有效翻译行 !")
+            logger.warning(f"\t- ***** Файл {file} не содержит допустимых строк перевода !")
             return
         try:
             results_lines_csv = [
@@ -498,7 +498,7 @@ class ProjectDOL:
 
         file_mapping: dict = {}
         #for root, dir_list, file_list in os.walk(DIR_RAW_DICTS / type_manual / self._version / "csv"):
-        for root, dir_list, file_list in os.walk(DIR_RAW_DICTS / type_manual / self._version / "json"):
+        for root, dir_list, file_list in os.walk(DIR_RAW_DICTS / type_manual / self._version / "csv"):
             if any(_ in Path(root).absolute().__str__() for _ in blacklist_dirs):
                 continue
             if "失效词条" in root:
@@ -507,42 +507,41 @@ class ProjectDOL:
                 # logger.warning(f"替换文件：{file}")
                 if any(_ in file for _ in blacklist_files):
                     continue
-                if file.endswith(".js.json"):
-                    file_mapping[Path(root).absolute() / file] = DIR_GAME_TEXTS / Path(root).relative_to(DIR_RAW_DICTS / type_manual / self._version / "json" / "game") / f"{file.split('.')[0]}.js".replace("utf8\\", "")
+                if file.endswith(".js.csv"):
+                    file_mapping[Path(root).absolute() / file] = DIR_GAME_TEXTS / Path(root).relative_to(DIR_RAW_DICTS / type_manual / self._version / "csv" / "game") / f"{file.split('.')[0]}.js".replace("utf8\\", "")
                 else:
-                    file_mapping[Path(root).absolute() / file] = DIR_GAME_TEXTS / Path(root).relative_to(DIR_RAW_DICTS / type_manual / self._version / "json" / "game") / f"{file.split('.')[0]}.twee".replace("utf8\\", "")
+                    file_mapping[Path(root).absolute() / file] = DIR_GAME_TEXTS / Path(root).relative_to(DIR_RAW_DICTS / type_manual / self._version / "csv" / "game") / f"{file.split('.')[0]}.twee".replace("utf8\\", "")
 
         tasks = [
-            self._apply_for_gather(json_file, target_file, debug_flag=debug_flag)
-            for idx, (json_file, target_file) in enumerate(file_mapping.items())
+            self._apply_for_gather(csv_file, twee_file, debug_flag=debug_flag)
+            for idx, (csv_file, twee_file) in enumerate(file_mapping.items())
         ]
         await asyncio.gather(*tasks)
-        logger.info(f"##### {self._mention_name}汉化覆写完毕 !\n")
+        logger.info(f"##### {self._mention_name} Перевод перезаписан !\n")
 
-    async def _apply_for_gather(self, json_file: Path, target_file: Path, debug_flag: bool = False):
+    async def _apply_for_gather(self, csv_file: Path, target_file: Path, debug_flag: bool = False):
         """gather 用"""
         with open(target_file, "r", encoding="utf-8") as fp:
             raw_targets: list[str] = fp.readlines()
         raw_targets_temp = raw_targets.copy()
 
-        with open(json_file, "r", encoding="utf-8") as fp:
-            translations = json.load(fp)
-            for entry in translations:
-                if len(entry) < 3:  # 没汉化
+        with open(csv_file, "r", encoding="utf-8") as fp:
+            for row in csv.reader(fp):
+                if len(row) < 3:  # 没汉化
                     continue
-                en = entry.get("original")
-                zh = entry.get("translation")
+                en, zh = row[-2:]
+                en, zh = en.strip(), zh.strip()
                 if not zh:  # 没汉化/汉化为空
                     continue
 
                 zh = re.sub('^(“)', '"', zh)
                 zh = re.sub('(”)$', '"', zh)
                 if self._is_lack_angle(zh, en):
-                    logger.warning(f"\t!!! 可能的尖括号数量错误：{en} | {zh} | https://paratranz.cn/projects/{PARATRANZ_PROJECT_DOL_ID}/strings?text={quote(en)}")
+                    logger.warning(f"\t!!! Возможная ошибка в количестве угловых скобок：{en} | {zh} | https://paratranz.cn/projects/{PARATRANZ_PROJECT_DOL_ID}/strings?text={quote(en)}")
                     if debug_flag:
                         webbrowser.open(f"https://paratranz.cn/projects/{PARATRANZ_PROJECT_DOL_ID}/strings?text={quote(en)}")
                 if self._is_different_event(zh, en):
-                    logger.warning(f"\t!!! 可能的事件名称错翻：{en} | {zh} | https://paratranz.cn/projects/{PARATRANZ_PROJECT_DOL_ID}/strings?text={quote(en)}")
+                    logger.warning(f"\t!!! Возможная ошибка перевода названия события：{en} | {zh} | https://paratranz.cn/projects/{PARATRANZ_PROJECT_DOL_ID}/strings?text={quote(en)}")
                     if debug_flag:
                         webbrowser.open(f"https://paratranz.cn/projects/{PARATRANZ_PROJECT_DOL_ID}/strings?text={quote(en)}")
 
@@ -557,7 +556,7 @@ class ProjectDOL:
         if target_file.name.endswith(".js"):
             try:
                 self._acorn.parse("".join(raw_targets))
-                LOGGER_COLOR.info(f"<g>JS 语法检测通过</g> {target_file}")
+                LOGGER_COLOR.info(f"<g>JS Проверка синтаксиса пройдена</g> {target_file}")
             except JSSyntaxError as err:
                 try:
                     LOGGER_COLOR.error(f"{target_file} | {err.err_code(raw_targets)}")

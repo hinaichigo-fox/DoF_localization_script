@@ -165,7 +165,7 @@ class ProjectDOL:
                 else:
                     self._game_texts_file_lists.append(Path(root).absolute() / file)
 
-        logger.info(f"##### {self._mention_name}所有文本文件位置已获取 !\n")
+        logger.info(f"##### {self._mention_name} Все расположения текстовых файлов получены !\n")
 
     async def _create_all_text_files_dir(self):
         """创建目录防报错"""
@@ -217,7 +217,7 @@ class ProjectDOL:
             ]
 
         if not any(able_lines):
-            logger.warning(f"\t- ***** 文件 {file} 无有效翻译行 !")
+            logger.warning(f"\t- ***** Файл {file} не содержит допустимых строк перевода !")
             return
         try:
             results_lines_csv = [
@@ -516,7 +516,7 @@ class ProjectDOL:
             for idx, (csv_file, twee_file) in enumerate(file_mapping.items())
         ]
         await asyncio.gather(*tasks)
-        logger.info(f"##### {self._mention_name}汉化覆写完毕 !\n")
+        logger.info(f"##### {self._mention_name} Перевод перезаписан !\n")
 
     async def _apply_for_gather(self, csv_file: Path, target_file: Path, debug_flag: bool = False):
         """gather 用"""
@@ -536,11 +536,11 @@ class ProjectDOL:
                 zh = re.sub('^(“)', '"', zh)
                 zh = re.sub('(”)$', '"', zh)
                 if self._is_lack_angle(zh, en):
-                    logger.warning(f"\t!!! 可能的尖括号数量错误：{en} | {zh} | https://paratranz.cn/projects/{PARATRANZ_PROJECT_DOL_ID}/strings?text={quote(en)}")
+                    logger.warning(f"\t!!! Возможная ошибка в количестве угловых скобок：{en} | {zh} | https://paratranz.cn/projects/{PARATRANZ_PROJECT_DOL_ID}/strings?text={quote(en)}")
                     if debug_flag:
                         webbrowser.open(f"https://paratranz.cn/projects/{PARATRANZ_PROJECT_DOL_ID}/strings?text={quote(en)}")
                 if self._is_different_event(zh, en):
-                    logger.warning(f"\t!!! 可能的事件名称错翻：{en} | {zh} | https://paratranz.cn/projects/{PARATRANZ_PROJECT_DOL_ID}/strings?text={quote(en)}")
+                    logger.warning(f"\t!!! Возможная ошибка перевода названия события：{en} | {zh} | https://paratranz.cn/projects/{PARATRANZ_PROJECT_DOL_ID}/strings?text={quote(en)}")
                     if debug_flag:
                         webbrowser.open(f"https://paratranz.cn/projects/{PARATRANZ_PROJECT_DOL_ID}/strings?text={quote(en)}")
 
@@ -555,7 +555,7 @@ class ProjectDOL:
         if target_file.name.endswith(".js"):
             try:
                 self._acorn.parse("".join(raw_targets))
-                LOGGER_COLOR.info(f"<g>JS 语法检测通过</g> {target_file}")
+                LOGGER_COLOR.info(f"<g>JS Проверка синтаксиса пройдена</g> {target_file}")
             except JSSyntaxError as err:
                 try:
                     LOGGER_COLOR.error(f"{target_file} | {err.err_code(raw_targets)}")
